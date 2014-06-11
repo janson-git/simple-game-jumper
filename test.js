@@ -11,14 +11,24 @@ var Player = function () {
     this.o = $("#ball");
     this.x = 1;
     this.y = 1;
-    this.height = 30;
-    this.width = 30;
+    this.height = 10;
+    this.width = 10;
     
-    this.weight = 6;
+    this.weight = 16;
     this.energy = 0;
     
-    this.lostEnergyCoeff = 10;
+    this.lostEnergyCoeff = 0.3;
+    this.zeroTrashold = 5;
     this.readyToJump = false;
+};
+
+Player.prototype.init = function() {
+    $(this.o).css({
+        width: this.width, 
+        height: this.height,
+        borderRadius: this.height/2,
+        backgroundColor: "#f69"
+    });
 };
 
 Player.prototype.draw = function() {
@@ -32,10 +42,14 @@ Player.prototype.draw = function() {
         // если начался уход ниже пола - сбрасываем энергию в ноль.
         if (this.y > (Game.floorOffset() - this.height)) {
             this.y = Game.floorOffset() - this.height;
-            if (Math.abs(this.energy) < this.lostEnergyCoeff) {
+            if (Math.abs(this.energy) < this.zeroTrashold) {
                 this.energy = 0;
             } else {
-                this.energy = Math.abs(this.energy) - this.lostEnergyCoeff;
+                if (Key.isDown(Key.UP)) {
+                    this.energy = Math.abs(this.energy);
+                } else {
+                    this.energy = Math.abs(this.energy) - Math.abs(this.energy) * this.lostEnergyCoeff;
+                }
             }
         }
         
@@ -110,6 +124,7 @@ Game.start = function() {
     Game.player = new Player();
     Game.player.x = 100;
     Game.player.y = 400;
+    Game.player.init();
     
     Game.draw();
 
