@@ -15,6 +15,7 @@ var Player = function () {
     this.width = 10;
     
     this.weight = 16;
+    this.speed = 0;
     this.energy = 0;
     
     this.lostEnergyCoeff = 0.3;
@@ -34,21 +35,26 @@ Player.prototype.init = function() {
 Player.prototype.draw = function() {
     
     // сначала проверим: если отпустили Key.DOWN, и при этом есть энергия: делаем подскок!
-    if (!Key.isDown(Key.DOWN) && this.y <= (Game.floorOffset() - this.height)) {
+    if (!Key.isDown(Key.DOWN) && this.energy > 0) {
+        this.speed = this.energy;
+        this.energy = 0;
+    } 
+    
+    if (this.y <= (Game.floorOffset() - this.height)) {
         // this.energy - начальная скорость на подскок.
         // начальная скорость на следующий кадр:
-        this.energy = this.energy - ((1/Game.fps) * Game.g * this.weight);
-        this.y = this.y - (this.energy / 10);
+        this.speed = this.speed - ((1/Game.fps) * Game.g * this.weight);
+        this.y = this.y - (this.speed / 10);
         // если начался уход ниже пола - сбрасываем энергию в ноль.
         if (this.y > (Game.floorOffset() - this.height)) {
             this.y = Game.floorOffset() - this.height;
-            if (Math.abs(this.energy) < this.zeroTrashold) {
-                this.energy = 0;
+            if (Math.abs(this.speed) < this.zeroTrashold) {
+                this.speed = 0;
             } else {
                 if (Key.isDown(Key.UP)) {
-                    this.energy = Math.abs(this.energy);
+                    this.speed = Math.abs(this.speed);
                 } else {
-                    this.energy = Math.abs(this.energy) - Math.abs(this.energy) * this.lostEnergyCoeff;
+                    this.speed = Math.abs(this.speed) - Math.abs(this.speed) * this.lostEnergyCoeff;
                 }
             }
         }
@@ -57,10 +63,12 @@ Player.prototype.draw = function() {
         if (this.y > (Game.floorOffset() - this.height)) {
             this.y = Game.floorOffset() - this.height;
         }
-        this.energy = 0;
+        this.speed = 0;
     }
     
-    //console.log(this.y, Game.floorOffset() - this.height, this.energy);
+    this.speed = Math.round(this.speed);
+    
+    $("#debug").html('Energy: ' + this.energy + '; Speed: ' + this.speed + ';');
     
     $(this.o).offset({top: this.y, left: this.x});
 };
@@ -74,9 +82,7 @@ Player.prototype.moveUp = function() {
     this.y -= 1;
 };
 Player.prototype.moveDown = function() {
-    if (Game.floorOffset() > (this.y + this.height)) {
-        this.y += 1;
-    } else {
+    if (Game.floorOffset() <= (this.y + this.height)) {
         this.energy++;
     }
 };
